@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { angle } from "../utils/math";
+import { angle, getTriangleOrientation, getTextPosition, calculateArcAngles } from "../utils/math";
 
 export default function TriangleCanvas({ points }) {
   const canvasRef = useRef();
@@ -33,27 +33,10 @@ export default function TriangleCanvas({ points }) {
     const angleB = angle(p2, p1, p3);
     const angleC = angle(p3, p1, p2);
 
-    const getTriangleOrientation = (p1, p2, p3) => {
-      return (p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y);
-    };
-
     const triangleOrientation = getTriangleOrientation(p1, p2, p3);
 
     const drawAngleArc = (vertex, p1, p2, radius = 30) => {
-      const angle1 = Math.atan2(p1.y - vertex.y, p1.x - vertex.x);
-      const angle2 = Math.atan2(p2.y - vertex.y, p2.x - vertex.x);
-      
-      let startAngle = angle1;
-      let endAngle = angle2;
-      
-      let angleDiff = endAngle - startAngle;
-      
-      while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-      while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-      
-      if ((triangleOrientation > 0 && angleDiff < 0) || (triangleOrientation < 0 && angleDiff > 0)) {
-        [startAngle, endAngle] = [endAngle, startAngle];
-      }
+      const { startAngle, endAngle } = calculateArcAngles(vertex, p1, p2, triangleOrientation);
       
       ctx.strokeStyle = "#16a34a";
       ctx.lineWidth = 2;
@@ -69,19 +52,6 @@ export default function TriangleCanvas({ points }) {
     ctx.font = "bold 16px Arial";
     ctx.fillStyle = "#1f2937";
     
-    const offsetDistance = 20;
-    
-    const getTextPosition = (vertex, p1, p2) => {
-      const centerX = (p1.x + p2.x) / 2 - vertex.x;
-      const centerY = (p1.y + p2.y) / 2 - vertex.y;
-      const length = Math.sqrt(centerX * centerX + centerY * centerY);
-      
-      return {
-        x: vertex.x + (centerX / length) * offsetDistance,
-        y: vertex.y + (centerY / length) * offsetDistance
-      };
-    };
-
     const pos1 = getTextPosition(p1, p2, p3);
     const pos2 = getTextPosition(p2, p1, p3);
     const pos3 = getTextPosition(p3, p1, p2);
